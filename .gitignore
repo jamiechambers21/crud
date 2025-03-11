@@ -1,0 +1,22 @@
+# Ignore the virtual environment
+venv/
+
+# Ignore migrations folder
+migrations/
+
+# Ignore SQLite database file
+app.db
+SQLite_Retrieving_data.db
+
+# Ignore any file that starts with "xx_"
+xx_*
+
+# Ignore compiled Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore system files (optional)
+.DS_Store
+Thumbs.db

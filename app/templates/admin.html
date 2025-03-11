@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Admin Panel</h1>
+
+    <h2>Famlies</h2>
+    <table border="1">
+        <tr><th>ID</th><th>Family name</th><th>Code</th>
+        {% for family in families %}
+        <tr>
+            <td>{{ family.id }}</td>
+            <td>{{ family.name }}</td>
+            <td>{{ family.code }}</td>
+          </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Users</h2>
+    <table border="1">
+        <tr><th>ID</th><th>Family ID</th><th>Username</th><th>Email</th><th>Admin</th><th>Password Hash</th></tr>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.id }}</td>
+            <td>{{ user.family_id }}</td>
+            <td>{{ user.username }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ "Yes" if user.is_admin else "No" }}</td>
+            <td>{{ user.password_hash }}</td>
+          </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Babies</h2>
+    <table border="1">
+      <tr><th>ID</th><th>Family ID</th><th>Name</th><th>DOB</th></tr>
+      {% for baby in babies %}
+        <tr>
+            <td>{{ baby.id }}</td>
+            <td>{{ baby.family_id }}</td>
+            <td>{{ baby.name }}</td>
+            <td>{{ baby.date_of_birth }}</td>
+          </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Feedings</h2>
+    <table border="1">
+        <tr><th>ID</th><th>User ID</th><th>Baby ID</th><th>Type</th><th>Amount/Duration</th><th>Timestamp</th></tr>
+        {% for feeding in feedings %}
+        <tr>
+            <td>{{ feeding.id }}</td>
+            <td>{{ feeding.user_id }}</td>
+            <td>{{ feeding.baby.id }}</td>
+            <td>{{ feeding.feeding_type }}</td>
+            <td>
+                {% if feeding.feeding_type == 'breast' %}
+                    {{ feeding.breast_duration }} minutes
+                {% elif feeding.feeding_type == 'bottle' %}
+                    {{ feeding.bottle_amount }} ml
+                {% elif feeding.feeding_type == 'solids' %}
+                    {{ feeding.solid_amount }} g
+                {% endif %}
+            </td>
+            <td>{{ feeding.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Changes</h2>
+    <table border="1">
+        <tr><th>ID</th><th>User</th><th>Description</th><th>Timestamp</th></tr>
+        {% for change in changes %}
+        <tr>
+            <td>{{ change.id }}</td>
+            <td>{{ change.user.username }}</td>
+            <td>{{ change.description }}</td>
+            <td>{{ change.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Sleeps</h2>
+    <table border="1">
+        <tr><th>ID</th><th>User</th><th>Duration (minutes)</th><th>Timestamp</th></tr>
+        {% for sleep in sleeps %}
+        <tr>
+            <td>{{ sleep.id }}</td>
+            <td>{{ sleep.user.username }}</td>
+            <td>{{ sleep.duration }}</td>
+            <td>{{ sleep.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

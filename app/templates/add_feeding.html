@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Add Feeding</h1>
+    <form action="" method="post">
+        {{ form.hidden_tag() }}
+
+        <p>
+          {{ form.baby_id.label }}<br>
+          {{ form.baby_id(onchange="toggleFields()") }}<br>
+          {% for error in form.baby_id.errors %}
+              <span style="color: red;">[{{ error }}]</span>
+          {% endfor %}
+      </p>
+
+        <p>
+            {{ form.feeding_type.label }}<br>
+            {{ form.feeding_type(onchange="toggleFields()") }}<br>
+            {% for error in form.feeding_type.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+
+        <p id="breast_duration_field" style="display: none;">
+            {{ form.breast_duration.label }}<br>
+            {{ form.breast_duration() }} minutes<br>
+        </p>
+
+        <p id="bottle_amount_field" style="display: none;">
+            {{ form.bottle_amount.label }}<br>
+            {{ form.bottle_amount() }} ml<br>
+        </p>
+
+        <p id="solid_amount_field" style="display: none;">
+            {{ form.solid_amount.label }}<br>
+            {{ form.solid_amount() }} g<br>
+        </p>
+
+        <p>
+          {{ form.timestamp.label }}<br>
+          <input type="datetime-local" name="timestamp" value="{{ form.timestamp.data.strftime('%Y-%m-%dT%H:%M') }}">
+        </p>
+
+        <p>{{ form.submit() }}</p>
+    </form>
+
+    <script>
+        function toggleFields() {
+            var feedingType = document.querySelector("select[name='feeding_type']").value;
+
+            document.getElementById("breast_duration_field").style.display = (feedingType === 'breast') ? "block" : "none";
+            document.getElementById("bottle_amount_field").style.display = (feedingType === 'bottle') ? "block" : "none";
+            document.getElementById("solid_amount_field").style.display = (feedingType === 'solids') ? "block" : "none";
+        }
+
+        // Ensure correct fields are shown if the page is reloaded with a selected value
+        document.addEventListener("DOMContentLoaded", toggleFields);
+    </script>
+{% endblock %}

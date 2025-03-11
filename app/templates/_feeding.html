@@ -1,0 +1,20 @@
+<table>
+  <tr valign="top">
+      <td><img src="{{ feeding.user.avatar(36) }}"></td>
+      <td>
+          <b>{{ feeding.user.username }}</b> logged a feeding for <b>{{ feeding.baby.name }}</b><br>
+          <b>Type:</b> {{ feeding.feeding_type }} <br>
+
+          {% if feeding.feeding_type == 'breast' %}
+              <b>Duration:</b> {{ feeding.breast_duration }} minutes
+          {% elif feeding.feeding_type == 'bottle' %}
+              <b>Amount:</b> {{ feeding.bottle_amount }} ml
+          {% elif feeding.feeding_type == 'solids' %}
+              <b>Amount:</b> {{ feeding.solid_amount }} g
+          {% endif %}
+
+          <br><i>Time:</i> {{ feeding.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+      </td>
+  </tr>
+</table>
+<hr>
