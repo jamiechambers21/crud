@@ -1,4 +1,4 @@
-# CRUD
+# CRUD 💩
 
 Welcome to **CRUD** – the only app that helps you manage your family's chaos with the precision of a Swiss watch. Whether you're a sleep-deprived parent, a meddling grandparent, or just someone who likes to keep track of feedings, changings, and the occasional midnight snack, CRUD has got you covered!
 
