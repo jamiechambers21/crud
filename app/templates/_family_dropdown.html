@@ -1,0 +1,24 @@
+<label for="family-select">Select Family:</label>
+<select id="family-select" onchange="changeFamily(this.value)">
+    {% for fam in families %}
+        <option value="{{ fam.id }}" {% if fam.id == family.id %}selected{% endif %}>
+            {{ fam.name }}
+        </option>
+    {% endfor %}
+</select>
+
+<script>
+    function changeFamily(familyId) {
+        // Get the current page URL path (e.g., '/user/username' or '/add_feeding')
+        let currentPath = window.location.pathname;
+
+        // Get the current URL search parameters (if any)
+        let searchParams = new URLSearchParams(window.location.search);
+
+        // Update or add the family_id parameter
+        searchParams.set("family_id", familyId);
+
+        // Reload the page with the updated URL
+        window.location.href = currentPath + "?" + searchParams.toString();
+    }
+</script>

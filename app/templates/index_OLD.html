@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Hi, {{ current_user.username }}!</h1>
+    <h2>Would you like to log some information?</h2>
+    <a href="{{ url_for('add_feeding') }}">Feeding</a>
+
+    <!-- <h2>Feedings in the Last Week</h2>
+    <canvas id="feedingChart"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var ctx = document.getElementById('feedingChart').getContext('2d');
+            var feedingChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: {{ labels | tojson }},
+                    datasets: [{
+                        label: 'Number of Feedings',
+                        data: {{ data | tojson }},
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: "Number of Feedings" }
+                        },
+                        x: {
+                            title: { display: true, text: "Date" }
+                        }
+                    }
+                }
+            });
+        });
+    </script> -->
+{% endblock %}

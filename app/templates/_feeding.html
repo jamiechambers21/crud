@@ -11,6 +11,9 @@
               <b>Amount:</b> {{ feeding.bottle_amount }} ml
           {% elif feeding.feeding_type == 'solids' %}
               <b>Amount:</b> {{ feeding.solid_amount }} g
+              {% if feeding.recipe_id %}
+                  <br><b>Recipe:</b> {{ feeding.recipe.recipe_name }}
+              {% endif %}
           {% endif %}
 
           <br><i>Time:</i> {{ feeding.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}

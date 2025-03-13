@@ -7,6 +7,14 @@ import sqlalchemy as sa
 import sqlalchemy.orm as so
 from werkzeug.security import generate_password_hash, check_password_hash
 
+
+# User-Family Association Table
+users_families = db.Table(
+    "users_families",
+    db.Column("user_id", sa.ForeignKey("users.id"), primary_key=True),
+    db.Column("family_id", sa.ForeignKey("families.id"), primary_key=True),
+)
+
 # Family Table
 class Family(db.Model):
     __tablename__ = "families"
@@ -15,7 +23,8 @@ class Family(db.Model):
     name: so.Mapped[str] = so.mapped_column(sa.String(100))
     code: so.Mapped[str] = so.mapped_column(sa.String(100))#, unique=True)
 
-    users = so.relationship("User", back_populates="family", cascade="all, delete-orphan")
+    #users = so.relationship("User", back_populates="family", cascade="all, delete-orphan")
+    users = so.relationship("User", secondary=users_families, back_populates="families")
     babies = so.relationship("Baby", back_populates="family", cascade="all, delete-orphan")
     recipes = so.relationship("Recipe", back_populates="family", cascade="all, delete-orphan")
 
@@ -24,13 +33,14 @@ class User(UserMixin, db.Model):
     __tablename__ = "users"
 
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
-    family_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("families.id"), index=True)
+    #family_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("families.id"), index=True)
     username: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=True)
     email: so.Mapped[str] = so.mapped_column(sa.String(120), index=True, unique=True)
     password_hash: so.Mapped[Optional[str]] = so.mapped_column(sa.String(256))
     is_admin = db.Column(db.Boolean, default=False)
 
-    family = so.relationship("Family", back_populates="users")
+    #family = so.relationship("Family", back_populates="users")
+    families = so.relationship("Family", secondary=users_families, back_populates="users")
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -66,9 +76,9 @@ class Recipe(db.Model):
 
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     family_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("families.id"), index=True)
-    name: so.Mapped[str] = so.mapped_column(sa.String(100))
-    ingredients: so.Mapped[str] = so.mapped_column(sa.Text)
-    instructions: so.Mapped[str] = so.mapped_column(sa.Text)
+    recipe_name: so.Mapped[str] = so.mapped_column(sa.String(100))
+    recipe_ingredients: so.Mapped[str] = so.mapped_column(sa.Text)
+    recipe_instructions: so.Mapped[str] = so.mapped_column(sa.Text)
     amount: so.Mapped[int] = so.mapped_column(sa.Integer)
 
     family = so.relationship("Family", back_populates="recipes")
@@ -87,6 +97,7 @@ class Feeding(db.Model):
     solid_amount: so.Mapped[Optional[int]] = so.mapped_column(sa.Integer)
     recipe_id: so.Mapped[Optional[int]] = so.mapped_column(sa.ForeignKey("recipes.id"), nullable=True)
 
+    recipe = db.relationship('Recipe', backref='feedings')
     baby = so.relationship("Baby", back_populates="feedings")
     user = so.relationship('User', backref='feedings')
 

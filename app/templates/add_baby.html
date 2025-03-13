@@ -6,6 +6,9 @@
         {{ form.hidden_tag() }}
 
         <h2>Baby Information</h2>
+        <!-- Include Family Dropdown -->
+        {% include '_family_dropdown.html' %}
+
         <p>
             {{ form.baby_name.label }}<br>
             {{ form.baby_name(size=32) }}<br>

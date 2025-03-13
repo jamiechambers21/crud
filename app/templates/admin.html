@@ -3,6 +3,17 @@
 {% block content %}
     <h1>Admin Panel</h1>
 
+    <h2>User-Famlies Association</h2>
+    <table border="1">
+        <tr><th>user_id</th><th>family_id</th>
+        {% for user_family in users_families %}
+        <tr>
+            <td>{{ user_family.user_id }}</td>
+            <td>{{ user_family.family_id }}</td>
+          </tr>
+        {% endfor %}
+    </table>
+
     <h2>Famlies</h2>
     <table border="1">
         <tr><th>ID</th><th>Family name</th><th>Code</th>
@@ -17,11 +28,10 @@
 
     <h2>Users</h2>
     <table border="1">
-        <tr><th>ID</th><th>Family ID</th><th>Username</th><th>Email</th><th>Admin</th><th>Password Hash</th></tr>
+        <tr><th>ID</th><th>Username</th><th>Email</th><th>Admin</th><th>Password Hash</th></tr>
         {% for user in users %}
         <tr>
             <td>{{ user.id }}</td>
-            <td>{{ user.family_id }}</td>
             <td>{{ user.username }}</td>
             <td>{{ user.email }}</td>
             <td>{{ "Yes" if user.is_admin else "No" }}</td>
@@ -45,7 +55,7 @@
 
     <h2>Feedings</h2>
     <table border="1">
-        <tr><th>ID</th><th>User ID</th><th>Baby ID</th><th>Type</th><th>Amount/Duration</th><th>Timestamp</th></tr>
+        <tr><th>ID</th><th>User ID</th><th>Baby ID</th><th>Type</th><th>Amount/Duration</th><th>Rec ID</th><th>Timestamp</th></tr>
         {% for feeding in feedings %}
         <tr>
             <td>{{ feeding.id }}</td>
@@ -61,6 +71,7 @@
                     {{ feeding.solid_amount }} g
                 {% endif %}
             </td>
+            <td>{{ feeding.recipe_id }}</td>
             <td>{{ feeding.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
         </tr>
         {% endfor %}
@@ -91,4 +102,21 @@
         </tr>
         {% endfor %}
     </table>
+
+    <h2>Recipes</h2>
+    <table border="1">
+        <tr><th>ID</th><th>Family ID</th><th>name</th><th>ingredients</th><th>instructions</th><th>amount</th></tr>
+        {% for recipe in recipes %}
+        <tr>
+            <td>{{ recipe.id }}</td>
+            <td>{{ recipe.family_id }}</td>
+            <td>{{ recipe.recipe_name }}</td>
+            <td>{{ recipe.recipe_ingredients }}</td>
+            <td>{{ recipe.recipe_instructions }}</td>
+            <td>{{ recipe.amount }}</td>
+
+        </tr>
+        {% endfor %}
+    </table>
+
 {% endblock %}

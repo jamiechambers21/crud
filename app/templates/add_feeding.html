@@ -5,6 +5,9 @@
     <form action="" method="post">
         {{ form.hidden_tag() }}
 
+        <!-- Include Family Dropdown -->
+        {% include '_family_dropdown.html' %}
+
         <p>
           {{ form.baby_id.label }}<br>
           {{ form.baby_id(onchange="toggleFields()") }}<br>
@@ -31,9 +34,20 @@
             {{ form.bottle_amount() }} ml<br>
         </p>
 
+        {% if recipes %}
+            <p id="recipe_field" style="display: none;">
+              <label for="recipe-select">Select Recipe:</label>
+              <select id="recipe-select" name="recipe_id">
+                  {% for rec in recipes %}
+                      <option value="{{ rec.id }}">{{ rec.recipe_name }}</option>
+                  {% endfor %}
+              </select>
+            </p>
+        {% endif %}
+
         <p id="solid_amount_field" style="display: none;">
-            {{ form.solid_amount.label }}<br>
-            {{ form.solid_amount() }} g<br>
+          {{ form.solid_amount.label }}<br>
+          {{ form.solid_amount() }} g<br>
         </p>
 
         <p>
@@ -47,13 +61,17 @@
     <script>
         function toggleFields() {
             var feedingType = document.querySelector("select[name='feeding_type']").value;
+            var recipeSelect = document.getElementById("recipe-select");
 
             document.getElementById("breast_duration_field").style.display = (feedingType === 'breast') ? "block" : "none";
             document.getElementById("bottle_amount_field").style.display = (feedingType === 'bottle') ? "block" : "none";
             document.getElementById("solid_amount_field").style.display = (feedingType === 'solids') ? "block" : "none";
-        }
+            document.getElementById("recipe_field").style.display = (feedingType === 'solids') ? "block" : "none";
+          }
 
+          recipeField.style.display = (feedingType === 'solids') ? "block" : "none";
         // Ensure correct fields are shown if the page is reloaded with a selected value
         document.addEventListener("DOMContentLoaded", toggleFields);
     </script>
+
 {% endblock %}
