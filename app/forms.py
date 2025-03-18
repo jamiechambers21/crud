@@ -46,8 +46,13 @@ class EditFeedingForm(FlaskForm):
     bottle_amount = IntegerField('Bottle Amount (ml)', validators=[Optional()])
     solid_amount = IntegerField('Solid Amount (g)', validators=[Optional()])
     recipe_id = SelectField('Recipe', coerce=int, validators=[Optional()])  # No default empty choices needed
-    timestamp = DateTimeField('Feeding Time', format='%Y-%m-%dT%H:%M', default=datetime.now, validators=[DataRequired()])
+    timestamp = DateTimeField('Feeding Time',format='%Y-%m-%dT%H:%M',default=datetime.now,validators=[DataRequired()])
     submit = SubmitField('Submit')
+
+    def __init__(self, babies=[], recipes=[], *args, **kwargs):
+        super(EditFeedingForm, self).__init__(*args, **kwargs)
+        self.baby_id.choices = [(baby.id, baby.name) for baby in babies]
+        self.recipe_id.choices = [(rec.id, rec.recipe_name) for rec in recipes]
 
     def set_recipe_choices(self, recipes):
         """Dynamically set recipe choices."""
@@ -65,6 +70,6 @@ class AddFamilyForm(FlaskForm):
 class AddRecipeForm(FlaskForm):
     recipe_name = StringField('Recipe Name', validators=[DataRequired()])
     recipe_ingredients = StringField('Recipe Ingredients', validators=[Optional()])
-    recipe_instructions = StringField('Recipe Instructions', validators=[Optional()])
+    recipe_instructions = TextAreaField('Recipe Instructions', validators=[Optional()])
     amount = IntegerField('Amount', validators=[Optional()])
     submit = SubmitField('Submit')

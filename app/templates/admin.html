@@ -5,9 +5,10 @@
 
     <h2>User-Famlies Association</h2>
     <table border="1">
-        <tr><th>user_id</th><th>family_id</th>
+        <tr><th>ID</th><th>user_id</th><th>family_id</th>
         {% for user_family in users_families %}
         <tr>
+            <td>{{ user_family.id }}</td>
             <td>{{ user_family.user_id }}</td>
             <td>{{ user_family.family_id }}</td>
           </tr>

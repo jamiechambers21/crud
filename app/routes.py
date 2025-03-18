@@ -8,39 +8,6 @@ from flask_login import current_user, login_user, logout_user, login_required
 import sqlalchemy as sa
 from urllib.parse import urlsplit
 
-def get_user_families(user_id):
-    families = db.session.execute(
-        sa.select(Family).join(users_families).where(users_families.c.user_id == user_id)
-    ).scalars().all()
-
-    return families
-
-def get_user_family_data(user):
-    """Fetches all families, the selected family, and babies for a given user."""
-    # Get all families the user is part of
-    families = db.session.execute(
-        sa.select(Family).join(users_families).where(users_families.c.user_id == user.id)
-    ).scalars().all()
-
-    # Get the selected family ID from the request query parameters
-    family_id = request.args.get('family_id', type=int)
-
-    # Determine the selected family (default to the first one if not provided)
-    family = next((f for f in families if f.id == family_id), families[0] if families else None)
-
-    # Get babies for the selected family
-    babies = Baby.query.filter(Baby.family_id == family.id).all() if family else []
-
-    return families, family, babies
-
-def generate_code():
-    import random
-    import string
-    N = 32
-    char_set = string.ascii_letters + string.digits
-    code = ''.join(random.SystemRandom().choice(char_set) for _ in range(N))
-    return code
-
 @app.route('/')
 @login_required
 def index():
@@ -96,31 +63,17 @@ def register():
     form = RegistrationForm()
     if form.validate_on_submit():
         if form.family_code.data:  # If a family code is provided, join the existing family
-            family = Family.query.filter_by(code=form.family_code.data).first()
+            family = Family.get_family_from_code(form.family_code.data)
             if not family:
                 flash('Invalid family code.', 'error')
                 return render_template('register.html', title='Register', form=form)
         else:  # Otherwise, create a new family and baby profile
-            code = generate_code()
-            family = Family(name=form.family_name.data, code=code)
-            db.session.add(family)
-            db.session.commit()
+
+            family = Family.create_family(name = form.family_name.data)
+            Baby.create_baby(name=form.baby_name.data, date_of_birth=form.baby_dob.data, family_id=family.id)
 
         # Create a new user and associate with the family
-        user = User(username=form.username.data, email=form.email.data)
-        user.set_password(form.password.data)
-        db.session.add(user)
-        db.session.commit()
-
-        # Associate the user with the family (many-to-many)
-        user.families.append(family)
-        db.session.commit()
-
-        # Only create a baby if a new family is created
-        if not form.family_code.data:
-            baby = Baby(name=form.baby_name.data, date_of_birth=form.baby_dob.data, family_id=family.id)
-            db.session.add(baby)
-            db.session.commit()
+        _ = User.create_user(username=form.username.data, email=form.email.data, password = form.password.data, family=family)
 
         flash('Congratulations, you are now a registered user!')
         return redirect(url_for('login'))
@@ -129,15 +82,11 @@ def register():
 @app.route('/user/<username>')
 @login_required
 def user(username):
-    user = User.query.filter_by(id=current_user.id).first_or_404()
-    families, family, babies = get_user_family_data(user)
+    user, families, family = Family.get_user_families_and_family()
+    babies, _ = Family.get_family_data(family, fetch_babies=True, fetch_recipes=False)
 
     # Collect feedings for all babies in the selected family
-    feedings = sorted(
-        [feeding for baby in babies for feeding in baby.feedings],
-        key=lambda f: f.timestamp,
-        reverse=True
-    )
+    feedings = Feeding.get_feedings(babies)
 
     return render_template('user.html', user=user, families=families, family=family, feedings=feedings)
 
@@ -145,33 +94,22 @@ def user(username):
 @app.route('/add_feeding', methods=['GET', 'POST'])
 @login_required
 def add_feeding():
-    form = EditFeedingForm()
-    user = User.query.filter_by(id=current_user.id).first_or_404()
-    families, family, babies = get_user_family_data(user)
-    recipes = Recipe.query.filter(Recipe.family_id == family.id).all()
+    _, families, family = Family.get_user_families_and_family()
+    babies, recipes = Family.get_family_data(family, fetch_babies=True, fetch_recipes=True)
 
-    form.baby_id.choices = [(baby.id, baby.name) for baby in babies]
-    form.recipe_id.choices = [(rec.id, rec.recipe_name) for rec in recipes]
+    form = EditFeedingForm(babies=babies, recipes=recipes)
 
     if form.validate_on_submit():
-        timestamp = request.form.get('timestamp')
-        try:
-            timestamp = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M')
-        except ValueError:
-            timestamp = datetime.now()
-
-        feeding = Feeding(
+        Feeding.create_feeding(
             baby_id=form.baby_id.data,
             user_id=current_user.id,
+            timestamp=form.timestamp.data,
             feeding_type=form.feeding_type.data,
-            breast_duration=form.breast_duration.data or None,
-            bottle_amount=form.bottle_amount.data or None,
-            solid_amount=form.solid_amount.data or None,
-            recipe_id=form.recipe_id.data or None,
-            timestamp=timestamp
+            breast_duration=form.breast_duration.data,
+            bottle_amount=form.bottle_amount.data,
+            solid_amount=form.solid_amount.data,
+            recipe_id=form.recipe_id.data,
         )
-        db.session.add(feeding)
-        db.session.commit()
 
         flash('Your feeding information has been saved.')
         return redirect(url_for('add_feeding'))
@@ -182,22 +120,18 @@ def add_feeding():
 @login_required
 def add_recipe():
     form = AddRecipeForm()
-    user = User.query.filter_by(id=current_user.id).first_or_404()
-    families, family, _ = get_user_family_data(user)
-    # Collect feedings for all babies in the selected family
-    recipes = Recipe.query.filter(Recipe.family_id == family.id).all()
-    print(recipes)
+    _, families, family = Family.get_user_families_and_family()
+    _, recipes = Family.get_family_data(family, fetch_babies=False, fetch_recipes=True)
 
     if form.validate_on_submit():
-        recipe = Recipe(
+        Recipe.create_recipe(
+            family_id=family.id,
             recipe_name=form.recipe_name.data,
             recipe_ingredients=form.recipe_ingredients.data,
             recipe_instructions=form.recipe_instructions.data,
-            amount=form.amount.data,
-            family_id=family.id
+            amount=form.amount.data
         )
-        db.session.add(recipe)
-        db.session.commit()
+
         flash('Recipe added successfully!')
         return redirect(url_for('index'))
     return render_template('add_recipe.html', title='Add Recipe', families=families, family=family, recipes=recipes, form=form)
@@ -206,16 +140,14 @@ def add_recipe():
 @login_required
 def add_baby():
     form = AddBabyForm()
-    user = User.query.filter_by(id=current_user.id).first_or_404()
-    families, family, _ = get_user_family_data(user)
+    _, families, family = Family.get_user_families_and_family()
+
     if form.validate_on_submit():
-        baby = Baby(
+        Baby.create_baby(
             name=form.baby_name.data,
             date_of_birth=form.baby_dob.data,
             family_id=family.id
         )
-        db.session.add(baby)
-        db.session.commit()
         flash('Baby added successfully!')
         return redirect(url_for('index'))
     return render_template('add_baby.html', title='Add Baby', families=families, family=family, form=form)
@@ -226,7 +158,7 @@ def add_family():
     form = AddFamilyForm()
     if form.validate_on_submit():
         if form.family_code.data:  # If a family code is provided, join the existing family
-            family = Family.query.filter_by(code=form.family_code.data).first()
+            family = Family.get_family_from_code(form.family_code.data)
             if not family:
                 flash('Invalid family code.', 'error')
                 return render_template('register.html', title='Register', form=form)
@@ -235,23 +167,16 @@ def add_family():
             return render_template('add_family.html', title='Add Family', form=form)
 
         # Associate the user with the family (many-to-many)
-        user = User.query.get(current_user.id)
+        user = User.get_user_by_id(current_user.id)
 
         # Check if the association already exists
-        existing_association = db.session.execute(
-            sa.select(users_families).where(
-                (users_families.c.user_id == user.id) & (users_families.c.family_id == family.id)
-            )
-        ).first()
-
+        existing_association = user.check_user_family_association(family)
         if existing_association:
             flash("You're already part of this family!", "info")
             return redirect(url_for('index'))
 
         # Manually insert into the association table
-        association = users_families.insert().values(user_id=user.id, family_id=family.id)
-        db.session.execute(association)
-        db.session.commit()
+        user.add_family(family)
 
         flash('Family added successfully!')
         return redirect(url_for('index'))
@@ -275,6 +200,7 @@ def admin_required(func):
 @login_required
 @admin_required
 def admin():
+    users_fams = db.session.execute(sa.select(users_families)).fetchall()
     users = User.query.all()
     families = Family.query.all()
     babies = Baby.query.all()
@@ -282,7 +208,5 @@ def admin():
     feedings = Feeding.query.order_by(Feeding.timestamp.desc()).all()
     # changes = Change.query.order_by(Change.timestamp.desc()).all()
     # sleeps = Sleep.query.order_by(Sleep.timestamp.desc()).all()
-
-    users_fams = db.session.execute(sa.select(users_families)).fetchall()
 
     return render_template('admin.html', users_families=users_fams, users=users, families=families, babies=babies, recipes=recipes, feedings=feedings)# , changes=changes, sleeps=sleeps)
