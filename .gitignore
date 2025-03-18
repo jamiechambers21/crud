@@ -10,6 +10,7 @@ SQLite_Retrieving_data.db
 
 # Ignore any file that starts with "xx_"
 xx_*
+test.py
 
 # Ignore compiled Python files
 __pycache__/
